@@ -4,7 +4,7 @@ from ezkcl.lib.kcl_material import KclMaterial
 
 
 def extract_flag(name):
-    match = re.search('F(\d{4})$', name)
+    match = re.search('F([0-9a-fA-F]{4})$', name)
     if match:
         return int(match.group(1), 16)
 
@@ -12,15 +12,22 @@ def extract_flag(name):
 def load_obj_mats(filename):
     mats = {}
     g_flag = None
+    reset_group = False
     with open(filename) as f:
         for line in f.readlines():
             if line.startswith('usemtl'):
                 name = line[6:].strip()
                 flag = extract_flag(name)
-                mats[name] = KclMaterial(name, flag or g_flag)
+                if not flag and not reset_group:
+                    flag = g_flag
+                mats[name] = KclMaterial(name, flag)
+                reset_group = False
             elif line.startswith('g'):
                 name = line[1:].strip()
                 g_flag = extract_flag(name)
+                reset_group = False
+            elif line.startswith('f'):
+                reset_group = True
     return mats
 
 
