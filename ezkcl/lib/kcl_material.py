@@ -46,3 +46,8 @@ class KclMaterial:
     def __str__(self):
         kcl_type = list(KCL_TYPES.keys())[self.kcl_type]
         return kcl_type + ' - ' + KCL_TYPES[kcl_type][self.basic_effect]
+
+    def __eq__(self, other):
+        return type(other) is KclMaterial \
+               and other.name == self.name \
+               and other.flag == self.flag

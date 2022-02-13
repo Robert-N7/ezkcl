@@ -11,6 +11,7 @@ from ezkcl.gui.excluded_widget import ExcludedWidget
 from ezkcl.gui.mat_widget import MatWidget
 from ezkcl.lib import which
 from ezkcl.lib.kcl_material import KclMaterial
+from ezkcl.workers.decode_worker import DecodeWorker
 from ezkcl.workers.encode_worker import EncodeWorker
 
 
@@ -20,7 +21,7 @@ class MainWindow(QMainWindow):
         self.__init_ui()
         self.thread_pool = QThreadPool()
         self.thread_pool.setMaxThreadCount(2)
-        self.fname = None
+        self.obj_fname = None
         self.cwd = os.getcwd()
         self.kclt = which.which('wkclt')
         if not self.kclt:
@@ -31,18 +32,30 @@ class MainWindow(QMainWindow):
         self.current_materials = {}
         self.excluded_materials = {}
 
-    def open_dialog(self):
+    def open_obj_dialog(self):
         fname, filter = QFileDialog.getOpenFileName(self, 'Open file',
-                                                    self.cwd, "Obj/Kcl files (*.obj;*.kcl;*.flag)")
+                                                    self.cwd, "Obj files (*.obj)")
         if fname:
             self.open(fname)
-            self.file_edit.setText(fname)
+            self.obj_file_edit.setText(fname)
+
+    def open_kcl_dialog(self):
+        fname, filter = QFileDialog.getOpenFileName(self, 'Open file',
+                                                    self.cwd, "Kcl files (*.kcl)")
+        if fname:
+            self.kcl_file_edit.setText(fname)
+            self.kcl_fname = fname
+
+    def on_obj_change(self):
+        fname = self.obj_file_edit.text()
+        if os.path.exists(fname):
+            self.open(fname)
 
     def open(self, fname):
         self.cwd, base_name = os.path.split(fname)
         base, ext = os.path.splitext(base_name)
-        self.fname = os.path.join(self.cwd, base + '.obj')
-        if not os.path.exists(self.fname):
+        self.obj_fname = os.path.join(self.cwd, base + '.obj')
+        if not os.path.exists(self.obj_fname):
             return
         flag_file_mats = self.load_mats_from_flag_file()
         # Load in current material settings
@@ -72,7 +85,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Loaded ' + fname)
 
     def load_mats_from_flag_file(self):
-        d, base = os.path.split(self.fname)
+        d, base = os.path.split(self.obj_fname)
         b_name, ext = os.path.splitext(base)
         flag_file = os.path.join(d, b_name + '.flag')
         if not os.path.exists(flag_file):
@@ -107,13 +120,21 @@ class MainWindow(QMainWindow):
             self.main_excluded.show()
 
     def encode(self):
-        self.start_worker(EncodeWorker(self.kclt, self.fname,
-                                       self.current_materials,
-                                       self.excluded_widgets
-                                       ))
+        obj_file = self.obj_file_edit.text()
+        kcl_file = self.kcl_file_edit.text()
+        if not kcl_file:
+            kcl_file = obj_file[:-3] + 'kcl'
+            self.kcl_file_edit.setText(kcl_file)
+        self.start_worker(EncodeWorker(
+            self.kclt,
+            obj_file,
+            self.current_materials,
+            self.excluded_widgets,
+            kcl_file
+        ))
 
-    def start_worker(self, worker):
-        worker.connect(self.on_progress, self.on_error)
+    def start_worker(self, worker, on_finish=None):
+        worker.connect(self.on_progress, self.on_error, on_finish)
         self.thread_pool.start(worker)
 
     def on_progress(self, message):
@@ -123,12 +144,19 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(str(err_info[0]) + str(err_info[1]))
 
     def decode(self):
-        self.statusBar().showMessage('Decoding...')
-        kcl_file = os.path.join(self.cwd,
-                                os.path.splitext(os.path.basename(self.fname))[0] + '.kcl')
-        subprocess.run([self.kclt, 'decode', kcl_file, '-o'])
-        self.open(os.path.join(self.fname))
-        self.statusBar().showMessage('Finished!')
+        kcl_file = self.kcl_file_edit.text()
+        if not kcl_file:
+            self.statusBar().showMessage('Please enter a kcl file first')
+            return
+        obj_file = self.obj_file_edit.text()
+        if not obj_file:
+            obj_file = kcl_file[-3] + 'obj'
+            self.obj_file_edit.setText(obj_file)
+        self.start_worker(DecodeWorker(
+            self.kclt,
+            kcl_file,
+            obj_file,
+        ), lambda result: result and self.open(obj_file))
 
     def remove_material(self, mat):
         self.current_materials.pop(mat.name)
@@ -153,7 +181,7 @@ class MainWindow(QMainWindow):
         self.encode_act = encode_act = QAction('&Encode', self)
         encode_act.setShortcut('Ctrl+e')
         encode_act.setStatusTip('Encode KCL file')
-        encode_act.triggered.connect(self.open_dialog)
+        encode_act.triggered.connect(self.open_obj_dialog)
 
     def __init_ui(self):
         self.__init_actions()
@@ -164,15 +192,30 @@ class MainWindow(QMainWindow):
         self.file_select_w = QWidget(self)
         self.main_layout.addWidget(self.file_select_w)
         self.file_layout = QHBoxLayout(self)
-        self.file_edit = QLineEdit(self)
-        self.file_edit.setMaximumWidth(600)
-        self.file_layout.addWidget(self.file_edit)
+        label = QLabel('Obj File:', self)
+        self.file_layout.addWidget(label)
+        self.obj_file_edit = QLineEdit(self)
+        self.obj_file_edit.setMaximumWidth(500)
+        self.obj_file_edit.textChanged.connect(self.on_obj_change)
+        self.file_layout.addWidget(self.obj_file_edit)
         self.file_browse = QPushButton('Browse', self)
         self.file_browse.setMaximumWidth(150)
-        self.file_browse.clicked.connect(self.open_dialog)
+        self.file_browse.clicked.connect(self.open_obj_dialog)
         self.file_layout.addWidget(self.file_browse)
         self.file_select_w.setLayout(self.file_layout)
-
+        self.file_select = QWidget(self)
+        self.main_layout.addWidget(self.file_select)
+        flayout = QHBoxLayout(self)
+        label = QLabel('Kcl File:', self)
+        flayout.addWidget(label)
+        self.kcl_file_edit = QLineEdit(self)
+        self.kcl_file_edit.setMaximumWidth(500)
+        flayout.addWidget(self.kcl_file_edit)
+        self.kcl_file_browse = QPushButton('Browse', self)
+        self.kcl_file_browse.setMaximumWidth(150)
+        self.kcl_file_browse.clicked.connect(self.open_kcl_dialog)
+        flayout.addWidget(self.kcl_file_browse)
+        self.file_select.setLayout(flayout)
         # Encode/Decode
         self.buttons_widget = QWidget(self)
         self.buttons_layout = QHBoxLayout(self)

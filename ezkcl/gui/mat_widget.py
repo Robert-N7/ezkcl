@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 
 from ezkcl.gui.kcl_calculator import KCLCalculator
-from ezkcl.lib.kcl_types import KCL_TYPES
+from ezkcl.lib.kcl_types import KCL_TYPES, KCL_KEYS
 
 
 class MatWidget(QWidget):
@@ -31,8 +31,10 @@ class MatWidget(QWidget):
         self.controller.remove_material(self.mat)
         self.destroy()
 
-    def reload_mat(self):
-        type_label = KCL_TYPES.keys()[self.mat.kcl_type]
+    def save_mat(self, mat):
+        self.mat.flag = mat.flag
+        self.mat.calc_props()
+        type_label = KCL_KEYS[self.mat.kcl_type]
         type_label += ': ' + KCL_TYPES[type_label][self.mat.basic_effect]
         self.button.setText(type_label)
 

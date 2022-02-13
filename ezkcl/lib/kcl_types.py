@@ -61,3 +61,11 @@ KCL_TYPES = {
                       'Fast:spark, Star Ring crash, bump, Slow:Star Ring crash'],
     'Player Wall': ['Fast Bump'] * 8
 }
+
+KCL_KEYS = [
+    'Road', 'Slippery Road 1', 'Weak Off-Road', 'Off-Road', 'Heavy Off-Road', 'Slipppery Road 2', 'Boost Pad',
+    'Boost Ramp', 'Jump Pad', 'Item Road', 'Solid Fall', 'Moving Road', 'Wall', 'Invisible Wall', 'Item Wall',
+    'Wall 3', 'Fall Boundary', 'Cannon Activator', 'Force Recalculation', 'Half-Pipe Ramp', 'Wall 2',
+    'Moving Road 2', 'Gravity Road', 'Road 2', 'Sound Trigger', 'Unknown', 'Effect Trigger', 'Unknown 2',
+    'Half-pipe Invisible Wall', 'Moving Road 3', 'Special Walls', 'Player Wall'
+]
