@@ -19,7 +19,7 @@ class EncodeWorker(Worker):
         # clean out excluded materials
         obj.remove_materials(self.fname, self.excluded)
         # create flag file, and encode
-        flag_fname = os.path.join(d, os.path.basename(f) + '.flag')
+        flag_fname = os.path.join(d, os.path.splitext(os.path.basename(f))[0] + '.flag')
         flag_file = flag.create_flag_file(flag_fname, self.current_materials)
         result = subprocess.run([self.kclt,
                                  'encode',

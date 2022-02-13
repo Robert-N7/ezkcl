@@ -16,7 +16,7 @@ from ezkcl.workers.encode_worker import EncodeWorker
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, *args):
         super().__init__()
         self.__init_ui()
         self.thread_pool = QThreadPool()
@@ -31,6 +31,28 @@ class MainWindow(QMainWindow):
         self.materials = {}
         self.current_materials = {}
         self.excluded_materials = {}
+        self.resize(600, 200)
+        self.parse_args(*args)
+        self.show()
+
+    def parse_args(self, *args):
+        encode = False
+        decode = False
+        for arg in args:
+            stripped = arg.lstrip('-')
+            if stripped == 'encode':
+                encode = True
+            elif stripped == 'decode':
+                decode = True
+            elif arg.endswith('.kcl'):
+                self.kcl_file_edit.setText(arg)
+            elif arg.endswith('.obj'):
+                self.obj_file_edit.setText(arg)
+                self.open(arg)
+        if encode:
+            self.encode()
+        elif decode:
+            self.decode()
 
     def open_obj_dialog(self):
         fname, filter = QFileDialog.getOpenFileName(self, 'Open file',
@@ -116,7 +138,7 @@ class MainWindow(QMainWindow):
             self.excluded_layout.addWidget(widget)
             self.excluded_widgets[mat_] = widget
         self.excluded_widget.setLayout(self.excluded_layout)
-        if self.excluded_materials:
+        if self.excluded_materials and not self.main_excluded.isVisible():
             self.main_excluded.show()
 
     def encode(self):
@@ -259,13 +281,12 @@ class MainWindow(QMainWindow):
         self.excluded_label = QLabel('Excluded:')
         layout.addWidget(self.excluded_label)
         self.excluded_widget = QWidget()
+        self.excluded_layout = QHBoxLayout()
         self.scroll_area2 = QScrollArea()
         self.scroll_area2.setWidgetResizable(True)
         self.scroll_area2.setWidget(self.excluded_widget)
-        self.scroll_area2.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.excluded_layout = QVBoxLayout()
-        self.excluded_widget.setLayout(self.excluded_layout)
         self.excluded_widget.setStyleSheet('background-color: white')
+        self.excluded_widget.setLayout(self.excluded_layout)
         layout.addWidget(self.scroll_area2)
         self.main_excluded.setLayout(layout)
         self.main_layout.addWidget(self.main_excluded)
@@ -280,7 +301,5 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = MainWindow()
-    win.resize(600, 200)
-    win.show()
+    win = MainWindow(*sys.argv[1:])
     sys.exit(app.exec_())

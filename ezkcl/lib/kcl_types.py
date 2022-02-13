@@ -8,7 +8,7 @@ KCL_TYPES = {
     'Off-Road': ['Sand', 'Dirt', 'Mud', 'Water, no GFX', 'Grass', 'Sand, lighter GFX',
                  'Gravel, different impact SFX', 'Carpet'],
     'Heavy Off-Road': ['Sand', 'Dirt', 'Mud', 'Flowers', 'Grass', 'Snow', 'Sand', 'Dirt, no GFX'],
-    'Slipppery Road 2': ['Ice', 'Mud', 'Water', 'Normal road, different sound'],
+    'Slippery Road 2': ['Ice', 'Mud', 'Water', 'Normal road, different sound'],
     'Boost Pad': ['Default',
                   'If used and casino_roulette is nearby, the road rotates everything around counter-clockwise',
                   'Unknown', 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'Unknown'],
@@ -63,7 +63,7 @@ KCL_TYPES = {
 }
 
 KCL_KEYS = [
-    'Road', 'Slippery Road 1', 'Weak Off-Road', 'Off-Road', 'Heavy Off-Road', 'Slipppery Road 2', 'Boost Pad',
+    'Road', 'Slippery Road 1', 'Weak Off-Road', 'Off-Road', 'Heavy Off-Road', 'Slippery Road 2', 'Boost Pad',
     'Boost Ramp', 'Jump Pad', 'Item Road', 'Solid Fall', 'Moving Road', 'Wall', 'Invisible Wall', 'Item Wall',
     'Wall 3', 'Fall Boundary', 'Cannon Activator', 'Force Recalculation', 'Half-Pipe Ramp', 'Wall 2',
     'Moving Road 2', 'Gravity Road', 'Road 2', 'Sound Trigger', 'Unknown', 'Effect Trigger', 'Unknown 2',
